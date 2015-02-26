@@ -82,11 +82,11 @@ $di->set('db', function(){
  */
 $di->setShared('requestBody', function() {
 	$in = file_get_contents('php://input');
-	$in = json_decode($in, FALSE);
+	$in = json_decode($in, TRUE);
 
 	// JSON body could not be parsed, throw exception
 	if($in === null){
-		throw new HTTPException(
+		throw new \PhalconRest\Exceptions\HTTPException(
 			'There was a problem understanding the data sent to the server by the application.',
 			409,
 			array(
