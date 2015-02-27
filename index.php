@@ -5,40 +5,53 @@ use Phalcon\DI\FactoryDefault as DefaultDI,
 	Phalcon\Config\Adapter\Php as Config,
 	Phalcon\Loader;
 
-/**
- * By default, namespaces are assumed to be the same as the path.
- * This function allows us to assign namespaces to alternative folders.
- * It also puts the classes into the PSR-0 autoLoader.
- */
-$loader = new Loader();
-$loader->registerNamespaces(array(
-	'PhalconRest\Models' => __DIR__ . '/models/',
+// Set constants
+define('APP_ROOT_PATH',__DIR__);
+define('MICROSVCS','microservices');
+
+// Load PhalconRest framework/app files first
+$frameWorkLoader = new Loader();
+
+$frameWorkLoader->registerNamespaces(array(
 	'PhalconRest\Controllers' => __DIR__ . '/controllers/',
 	'PhalconRest\Exceptions' => __DIR__ . '/exceptions/',
 	'PhalconRest\Responses' => __DIR__ . '/responses/'
 ))->register();
 
-/**
- * The DI is our direct injector.  It will store pointers to all of our services
- * and we will insert it into all of our controllers.
- * @var DefaultDI
- */
+// Create dependancy injection container
 $di = new DefaultDI();
 
 
-/**
- * Return array of the Collections, which define a group of routes, from
- * routes/collections.  These will be mounted into the app itself later.
- */
-$di->set('collections', function(){
-	return include('./routes/routeLoader.php');
+// List of MicroServices.  Returns an array of microservices
+// TODO:  This can be even further decloupled as this directory can be moved and or used via composer
+$di->set(MICROSVCS, function(){
+
+    return array(
+        'UrlShortener'
+    );
+
 });
 
-/**
- * $di's setShared method provides a singleton instance.
- * If the second parameter is a function, then the service is lazy-loaded
- * on its first instantiation.
- */
+// Loader for svcs
+$svcsLoader = new Loader();
+
+$svcsNamespaces = array();
+
+// Load and register svc directories
+foreach($di->get( MICROSVCS ) as $service ){
+
+    $svcsNamespaces[$service] = APP_ROOT_PATH . '/'.MICROSVCS.'/'.$service.'/';
+
+}
+// Register in autoload
+$svcsLoader->registerNamespaces($svcsNamespaces)->register();
+
+// Array of collections ( routes ) loaded from iterating throw list of provided svcs
+$di->set('collections', function(){
+	return include('./helpers/routeLoader.php');
+});
+
+// Designate config
 $di->setShared('config', function() {
 	return new Config("config/config.php");
 });
@@ -76,7 +89,7 @@ $di->set('db', function(){
 
 /**
  * If our request contains a body, it has to be valid JSON.  This parses the 
- * body into a standard Object and makes that vailable from the DI.  If this service
+ * body into a standard Object and makes that available from the DI.  If this service
  * is called from a function, and the request body is nto valid JSON or is empty,
  * the program will throw an Exception.
  */
@@ -109,9 +122,7 @@ $app = new Phalcon\Mvc\Micro();
 $app->setDI($di);
 
 
-/**
- * Mount all of the collections, which makes the routes active.
- */
+// Mount collection of handlers/routes
 foreach($di->get('collections') as $collection){
 	$app->mount($collection);
 }
