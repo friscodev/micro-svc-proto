@@ -14,6 +14,8 @@ use \PhalconRest\Exceptions\HTTPException;
  *   Partials:
  *     offset=20
  *
+ * TODO: Heavy in different functionality, look to refactor and separate responsibility
+ *
  */
 class RESTController extends \PhalconRest\Controllers\BaseController{
 

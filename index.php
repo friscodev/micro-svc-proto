@@ -13,9 +13,9 @@ define('MICROSVCS','microservices');
 $frameWorkLoader = new Loader();
 
 $frameWorkLoader->registerNamespaces(array(
-	'PhalconRest\Controllers' => __DIR__ . '/controllers/',
-	'PhalconRest\Exceptions' => __DIR__ . '/exceptions/',
-	'PhalconRest\Responses' => __DIR__ . '/responses/'
+	'PhalconRest\Controllers' => APP_ROOT_PATH . '/controllers/',
+	'PhalconRest\Exceptions' => APP_ROOT_PATH . '/exceptions/',
+	'PhalconRest\Responses' => APP_ROOT_PATH . '/responses/'
 ))->register();
 
 // Create dependancy injection container
