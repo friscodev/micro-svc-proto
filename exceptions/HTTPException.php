@@ -18,12 +18,13 @@ class HTTPException extends \Exception{
 	}
 
 	public function send(){
-		$di = \Phalcon\DI::getDefault();
+
+        $di = \Phalcon\DI::getDefault();
 
 		$res = $di->get('response');
 		$req = $di->get('request');
-		
-			//query string, filter, default
+
+		//query string, filter, default
 		if(!$req->get('suppress_response_codes', null, null)){
 			$res->setStatusCode($this->getCode(), $this->response)->sendHeaders();
 		} else {

@@ -2,7 +2,7 @@
 
 use Phalcon\DI\FactoryDefault as DefaultDI,
 	Phalcon\Mvc\Micro\Collection,
-	Phalcon\Config\Adapter\Ini as IniConfig,
+	Phalcon\Config\Adapter\Php as Config,
 	Phalcon\Loader;
 
 /**
@@ -40,7 +40,7 @@ $di->set('collections', function(){
  * on its first instantiation.
  */
 $di->setShared('config', function() {
-	return new IniConfig("config/config.ini");
+	return new Config("config/config.php");
 });
 
 // As soon as we request the session service, it will be started.
@@ -107,74 +107,6 @@ $di->setShared('requestBody', function() {
  */
 $app = new Phalcon\Mvc\Micro();
 $app->setDI($di);
-
-/**
- * Before every request, make sure user is authenticated.
- * Returning true in this function resumes normal routing.
- * Returning false stops any route from executing.
- */
-
-/*
-This will require changes to fit your application structure.
-It supports Basic Auth, Session auth, and Exempted routes.
-
-It also allows all Options requests, as those tend to not come with
-cookies or basic auth credentials and Preflight is not implemented the
-same in every browser.
-*/
-
-/*
-$app->before(function() use ($app, $di) {
-
-	// Browser requests, user was stored in session on login, replace into DI
-	if ($di->getShared('session')->get('user') != false) {
-		$di->setShared('user', function() use ($di){
-			return $di->getShared('session')->get('user');
-		});
-		return true;
-	}
-
-	// Basic auth, for programmatic responses
-	if($app->request->getServer('PHP_AUTH_USER')){
-		$user = new \PhalconRest\Controllers\UsersController();
-		$user->login(
-			$app->request->getServer('PHP_AUTH_USER'),
-			$app->request->getServer('PHP_AUTH_PW')
-		);
-		return true;
-	}
-
-
-	// All options requests get a 200, then die
-	if($app->__get('request')->getMethod() == 'OPTIONS'){
-		$app->response->setStatusCode(200, 'OK')->sendHeaders();
-		exit;
-	}
-
-
-	// Exempted routes, such as login, or public info.  Let the route handler
-	// pick it up.
-	switch($app->getRouter()->getRewriteUri()){
-		case '/users/login':
-			return true;
-			break;
-		case '/example/route':
-			return true;
-			break;
-	}
-
-	// If we made it this far, we have no valid auth method, throw a 401.
-	throw new \PhalconRest\Exceptions\HTTPException(
-		'Must login or provide credentials.',
-		401,
-		array(
-			'dev' => 'Please provide credentials by either passing in a session token via cookie, or providing password and username via BASIC authentication.',
-			'internalCode' => 'Unauth:1'
-		)
-	);
-
-	return false;
-});*/
 
 
 /**
