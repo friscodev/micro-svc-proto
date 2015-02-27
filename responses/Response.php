@@ -6,7 +6,7 @@ class Response extends \Phalcon\DI\Injectable{
 	protected $head = false;
 
 	public function __construct(){
-		//parent::__construct();
+
 		$di = \Phalcon\DI::getDefault();
 		$this->setDI($di);
 		if(strtolower($this->di->get('request')->getMethod()) === 'head'){
@@ -15,6 +15,7 @@ class Response extends \Phalcon\DI\Injectable{
 	}
 
 	/**
+     *
 	 * In-Place, recursive conversion of array keys in snake_Case to camelCase
 	 * @param  array $snakeArray Array with snake_keys
 	 * @return  no return value, array is edited in place
