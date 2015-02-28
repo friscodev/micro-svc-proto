@@ -19,10 +19,10 @@ class Math {
     private static $base = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
     /**
-     * Convert a from a given base to base 10.
      *
-     * @param  string  $value
-     * @param  int     $base
+     * Convert a from a given base to base 10.
+     * @param $value
+     * @param int $b
      * @return int
      */
     public static function to_base_10($value, $b = 62)
@@ -39,10 +39,10 @@ class Math {
     }
 
     /**
-     * Convert from base 10 to another base.
      *
-     * @param  int     $value
-     * @param  int     $base
+     * Convert from base 10 to another base.
+     * @param $value
+     * @param int $b
      * @return string
      */
     public static function to_base($value, $b = 62)

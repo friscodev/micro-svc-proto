@@ -4,6 +4,9 @@ namespace UrlShortener\Controllers;
 
 
 use PhalconRest\Controllers\RESTController;
+use UrlShortener\Helpers\Math;
+use UrlShortener\Helpers\RegEx;
+use UrlShortener\Models\Url;
 
 /**
  *
@@ -14,27 +17,115 @@ use PhalconRest\Controllers\RESTController;
  */
 class UrlShortenerController extends RESTController {
 
-    public function get(){
+    /**
+     * UrlShortener\Helpers\RegEx object
+     * @var \UrlShortener\Helpers\RegEx
+     */
+    private $_regEx;
 
-        // Stub
-        return array("method", __METHOD__);
+    public function init(){
+
+        $this->_regEx = new RegEx();
+    }
+
+    /**
+     *
+     * General method to retrieve a single URL. Might want to retrieve for websvc or redirect
+     * @param $encodedid
+     * @return bool
+     *
+     */
+    public function retrieveUrl($encodedid){
+
+        $this->init();
+
+        // Many clients ( browsers, libs ) normalize encoding, let still check in case a custom tool is used
+        if($this->_regEx->checkUtf8($encodedid) == false){
+
+            $this->throwPreConditionException();
+        }
+
+        $result = Url::findFirst(Math::to_base_10($encodedid));
+
+        if(count($result) > 0){
+
+            return $result;
+        }
+
+        return false;
+
+    }
+
+    public function get($encodedid){
+
+        $this->init();
+
+        $result = $this->retrieveUrl($encodedid);
+
+        if($result != false){
+
+            return array("url"=>$result->toHttpUrl('http', 'www.popsugar.com'));
+        }
     }
 
     public function post(){
 
+        $this->init();
+
         // Get parsed request body
         $url = $this->di->getShared('requestBody');
 
-        // Minimal precondition check before we move further into process
+        // Minimal precondition check before we move further into process.
         if($this->validateStructure($url['url']) == false){
 
             $this->throwPreConditionException();
         }
 
-        // If this fails preconditions not met
+        // If this fails, URL must be very malformed
         if(($parsedUrl = parse_url($url['url'])) == false){
 
             $this->throwPreConditionException();
+
+        }
+
+        // If path isn't empty
+        if(trim($parsedUrl['path']) == ""){
+
+            $this->throwPreConditionException();
+        }
+
+        // Passed initial marks
+        // Get new model
+        $model = new Url;
+
+        // Bind to model
+        $model->path = $model->pathToJson($parsedUrl['path']);
+
+        // Use to avoid duplicate URLs
+        $model->path_hash = sha1($model->path);
+
+        // Get record with existing path hash
+        $existingUrl = Url::find("path_hash = '".$model->path_hash."'");
+
+        // Check results
+        if(count($existingUrl) > 0){
+
+            // If found, return shortened URL
+            return array(
+                // TODO: Move this to lang file
+                "message"=>"URL is already in system",
+                "url"=>Math::to_base($existingUrl[0]->id)
+            );
+        }
+
+
+        if(trim($parsedUrl['query']) != ""){
+            $model->qrystr = $model->qryStrToJson($parsedUrl['query']);
+        }
+
+        if($model->save() == true){
+
+            return array('shortened'=> $model->encodedUrl());
 
         }
 
@@ -42,14 +133,16 @@ class UrlShortenerController extends RESTController {
     }
 
     /**
-     * Should go in model or validator, but lets save mem and time by doing a small check here.
-     * Why instantiate further in app if basic compliance isn't met?
+     *
+     * Should go in model or validator, but lets save mem and time by
+     * doing a small check here.  Why instantiate further in app if basic
+     * compliance isn't met?
      * @param $url
      * @return string
      */
     public function validateStructure($url){
 
-        return preg_match('/^https?:\/\/|^\/\//', $url);
+        return $this->_regEx->checkUrlBeginsWith($url);
 
     }
 

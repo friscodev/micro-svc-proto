@@ -2,7 +2,7 @@
 
 use Phalcon\DI\FactoryDefault as DefaultDI,
 	Phalcon\Mvc\Micro\Collection,
-	Phalcon\Config\Adapter\Php as Config,
+	Phalcon\Config\Adapter\Ini as Config,
 	Phalcon\Loader;
 
 // Set constants
@@ -53,38 +53,13 @@ $di->set('collections', function(){
 
 // Designate config
 $di->setShared('config', function() {
-	return new Config("config/config.php");
+	return new Config(APP_ROOT_PATH."/config/config.ini");
 });
 
-// As soon as we request the session service, it will be started.
-$di->setShared('session', function(){
-	$session = new \Phalcon\Session\Adapter\Files();
-	$session->start();
-	return $session;
-});
-
-$di->set('modelsCache', function() {
-
-	//Cache data for one day by default
-	$frontCache = new \Phalcon\Cache\Frontend\Data(array(
-		'lifetime' => 3600
-	));
-
-	//File cache settings
-	$cache = new \Phalcon\Cache\Backend\File($frontCache, array(
-		'cacheDir' => __DIR__ . '/cache/'
-	));
-
-	return $cache;
-});
-
-/**
- * Database setup.  Here, we'll use a simple SQLite database of Disney Princesses.
- */
-$di->set('db', function(){
-	return new \Phalcon\Db\Adapter\Pdo\Sqlite(array(
-		'data/database.sqlite'
-	));
+$di->set('urlShortenerDb', function() use($di){
+    return new \Phalcon\Db\Adapter\Pdo\Mysql(
+        $di->getShared('config')->toArray()['urlShortenerDb']
+    );
 });
 
 /**

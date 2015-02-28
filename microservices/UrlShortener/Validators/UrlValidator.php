@@ -23,10 +23,5 @@ class UrlValidator extends \Phalcon\Validation {
             'message' => 'The path is required'
         )));
 
-        $this->add('qry', new PresenceOf(array(
-            'message' => 'The qry is required'
-        )));
-
-
     }
 } 
