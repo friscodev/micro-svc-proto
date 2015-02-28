@@ -42,7 +42,7 @@ class UrlShortenerController extends RESTController {
         // Many clients ( browsers, libs ) normalize encoding, let still check in case a custom tool is used
         if($this->_regEx->checkUtf8($encodedid) == false){
 
-            $this->throwPreConditionException();
+            $this->throwPreConditionException("Error in provided string", 400, "Check encoding");
         }
 
         $result = Url::findFirst(Math::to_base_10($encodedid));
@@ -66,6 +66,8 @@ class UrlShortenerController extends RESTController {
 
             return array("url"=>$result->toHttpUrl('http', 'www.popsugar.com'));
         }
+
+        $this->throwPreConditionException("Error", 400, "Check URL");
     }
 
     public function post(){
@@ -78,20 +80,20 @@ class UrlShortenerController extends RESTController {
         // Minimal precondition check before we move further into process.
         if($this->validateStructure($url['url']) == false){
 
-            $this->throwPreConditionException();
+            $this->throwPreConditionException("Error in URL", 400, "Check URL");
         }
 
         // If this fails, URL must be very malformed
         if(($parsedUrl = parse_url($url['url'])) == false){
 
-            $this->throwPreConditionException();
+            $this->throwPreConditionException("Error in URL", 400, "Check URL");
 
         }
 
         // If path isn't empty
         if(trim($parsedUrl['path']) == ""){
 
-            $this->throwPreConditionException();
+            $this->throwPreConditionException("Error in URL", 400, "Check URL");
         }
 
         // Passed initial marks
@@ -146,13 +148,13 @@ class UrlShortenerController extends RESTController {
 
     }
 
-    public function throwPreConditionException(){
+    public function throwPreConditionException($userMessage, $code, $devMessage){
 
         throw new \PhalconRest\Exceptions\HTTPException (
-            'Malformed URL',
-            412,
+            $userMessage,
+            $code,
             array(
-                'dev' => 'Unable to parse malformed URL'
+                'dev' => $devMessage
             )
         );
 
