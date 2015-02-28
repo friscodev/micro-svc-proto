@@ -39,12 +39,13 @@ class UrlShortenerController extends RESTController {
 
         $this->init();
 
-        // Many clients ( browsers, libs ) normalize encoding, let still check in case a custom tool is used
+        // Many clients ( browsers, libs ) normalize encoding, check in case a custom script is used to submit
         if($this->_regEx->checkUtf8($encodedid) == false){
 
             $this->throwPreConditionException("Error in provided string", 400, "Check encoding");
         }
 
+        // Decode submitted id
         $result = Url::findFirst(Math::to_base_10($encodedid));
 
         if(count($result) > 0){
@@ -68,6 +69,24 @@ class UrlShortenerController extends RESTController {
         }
 
         $this->throwPreConditionException("Error", 400, "Check URL");
+    }
+
+    /**
+     *
+     * Proof of concept for redir.  While not recommended, a server rewrite can be used to map to this route
+     *
+     * @param $encodedid
+     */
+    public function getForRedirect($encodedid){
+
+        $this->init();
+
+        $result = $this->retrieveUrl($encodedid);
+
+        if($result != false){
+
+            header("Location: " . $result->toHttpUrl('http', 'www.popsugar.com'));
+        }
     }
 
     public function post(){
@@ -112,12 +131,8 @@ class UrlShortenerController extends RESTController {
         // Check results
         if(count($existingUrl) > 0){
 
-            // If found, return shortened URL
-            return array(
-                // TODO: Move this to lang file
-                "message"=>"URL is already in system",
-                "url"=>Math::to_base($existingUrl[0]->id)
-            );
+            // If found, return shortened URL within exception
+            $this->throwPreConditionException("Already in system", 400, array("url"=>Math::to_base($existingUrl[0]->id)));
         }
 
 

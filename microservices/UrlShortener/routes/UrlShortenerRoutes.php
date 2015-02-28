@@ -19,6 +19,7 @@ return call_user_func(function(){
         ->setLazy(true);
 
     $routeCollection->get('/{encodedid:[0-9A-Za-z]+}', 'get');
+    $routeCollection->get('/redir/{encodedid:[0-9A-Za-z]+}', 'getForRedirect');
     $routeCollection->post('/', 'post');
 
     return $routeCollection;
